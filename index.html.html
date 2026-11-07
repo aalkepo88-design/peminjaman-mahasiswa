@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Portal Peminjaman - Mahasiswa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </head>
+  <body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
+    <div id="loginPage" class="flex items-center justify-center min-h-screen">
+      <div
+        class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100"
+      >
+        <h2 class="text-2xl font-bold text-center mb-2">Sistem Peminjaman</h2>
+        <p class="text-center text-slate-500 mb-6 text-sm">
+          Masuk untuk meminjam barang & ruangan
+        </p>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold mb-1">Email Kampus</label>
+            <input
+              type="email"
+              id="email"
+              class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="email@kampus.ac.id"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-1">Password</label>
+            <input
+              type="password"
+              id="password"
+              class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="minimal 6 karakter"
+            />
+          </div>
+          <div class="flex gap-3 pt-2">
+            <button
+              type="button"
+              onclick="prosesAuth('login')"
+              class="flex-1 bg-blue-600 text-white font-semibold py-3 rounded-xl hover:bg-blue-700"
+            >
+              Masuk
+            </button>
+            <button
+              type="button"
+              onclick="prosesAuth('register')"
+              class="flex-1 bg-slate-100 text-slate-700 font-semibold py-3 rounded-xl hover:bg-slate-200"
+            >
+              Daftar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="dashboardPage" class="hidden max-w-6xl mx-auto p-6">
+      <div
+        class="flex flex-col md:flex-row justify-between items-center bg-white p-5 rounded-2xl shadow-sm border border-slate-100 mb-8"
+      >
+        <div>
+          <h1 class="text-xl font-bold text-slate-800">Dashboard Peminjaman</h1>
+          <p id="userEmailDisplay" class="text-sm text-slate-500"></p>
+        </div>
+        <div class="flex gap-3 mt-4 md:mt-0">
+          <button
+            onclick="switchTab('katalog')"
+            class="px-5 py-2.5 rounded-xl text-sm font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100"
+          >
+            Katalog Barang
+          </button>
+          <button
+            onclick="switchTab('riwayat')"
+            class="px-5 py-2.5 rounded-xl text-sm font-semibold bg-slate-50 text-slate-700 hover:bg-slate-100"
+          >
+            Riwayat Saya
+          </button>
+          <button
+            onclick="logout()"
+            class="px-5 py-2.5 rounded-xl text-sm font-semibold bg-red-50 text-red-600 hover:bg-red-100"
+          >
+            Keluar
+          </button>
+        </div>
+      </div>
+
+      <div id="tabKatalog">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div class="lg:col-span-2 space-y-4">
+            <h2 class="text-lg font-bold flex items-center gap-2">
+              🛒 Pilih Barang / Ruangan
+            </h2>
+            <div
+              id="katalogContainer"
+              class="grid grid-cols-1 sm:grid-cols-2 gap-4"
+            ></div>
+          </div>
+          <div
+            class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 h-fit sticky top-6"
+          >
+            <h2 class="text-lg font-bold mb-4">📋 Form Pengajuan</h2>
+            <form id="formPinjam" class="space-y-4">
+              <input type="hidden" id="barangId" />
+              <div>
+                <label class="block text-xs font-semibold text-slate-500 mb-1"
+                  >Barang Terpilih</label
+                >
+                <input
+                  type="text"
+                  id="namaBarangPilihan"
+                  readonly
+                  required
+                  class="w-full p-3 border rounded-xl bg-slate-50 text-slate-600 font-medium"
+                  placeholder="Klik 'Pinjam' di katalog"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-500 mb-1"
+                  >NIM / NIPY</label
+                >
+                <input
+                  type="text"
+                  id="nim"
+                  required
+                  class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-500 mb-1"
+                    >Tgl Pinjam</label
+                  >
+                  <input
+                    type="datetime-local"
+                    id="waktuPinjam"
+                    required
+                    class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 text-sm outline-none"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-500 mb-1"
+                    >Tgl Kembali</label
+                  >
+                  <input
+                    type="datetime-local"
+                    id="waktuKembali"
+                    required
+                    class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 text-sm outline-none"
+                  />
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-500 mb-1"
+                  >Keperluan</label
+                >
+                <textarea
+                  id="keperluan"
+                  required
+                  rows="2"
+                  class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                ></textarea>
+              </div>
+              <button
+                type="submit"
+                class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700"
+              >
+                Kirim Pengajuan
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div id="tabRiwayat" class="hidden">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <h2 class="text-lg font-bold mb-4">🕰️ Riwayat & Status Pengajuan</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr
+                  class="bg-slate-50 text-sm text-slate-500 border-b border-slate-200"
+                >
+                  <th class="p-4 font-semibold">Barang</th>
+                  <th class="p-4 font-semibold">Jadwal Pinjam</th>
+                  <th class="p-4 font-semibold">Status</th>
+                  <th class="p-4 font-semibold">Catatan</th>
+                </tr>
+              </thead>
+              <tbody
+                id="riwayatContainer"
+                class="divide-y divide-slate-100 text-sm"
+              ></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const DB_BARANG_URL = "https://smfcjjicyjfqmwlisujt.supabase.co";
+      const DB_BARANG_KEY = "sb_publishable_KLAYYsK0DDAAvDDsEzZdAA_EB_XBHmr";
+      const clientBarang = window.supabase.createClient(
+        DB_BARANG_URL,
+        DB_BARANG_KEY,
+      );
+
+      const DB_PINJAM_URL = "https://wbhlnvdigjrwipovinjk.supabase.co";
+      const DB_PINJAM_KEY = "sb_publishable_YppIn9hZwuKSeDjIOz5vSQ_LJpsaDwX";
+      const clientPinjam = window.supabase.createClient(
+        DB_PINJAM_URL,
+        DB_PINJAM_KEY,
+        {
+          auth: { storageKey: "sesi_mahasiswa" },
+        },
+      );
+
+      let userAktif = null;
+
+      async function prosesAuth(tipe) {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
+        if (!email || !password) return alert("Isi email dan password!");
+
+        try {
+          let response =
+            tipe === "register"
+              ? await clientPinjam.auth.signUp({ email, password })
+              : await clientPinjam.auth.signInWithPassword({ email, password });
+
+          if (response.error) alert("Gagal: " + response.error.message);
+          else cekSesi();
+        } catch (err) {
+          alert("Error: " + err.message);
+        }
+      }
+
+      async function logout() {
+        await clientPinjam.auth.signOut();
+        window.location.reload();
+      }
+
+      async function cekSesi() {
+        const {
+          data: { user },
+        } = await clientPinjam.auth.getUser();
+        if (user) {
+          userAktif = user;
+          document.getElementById("loginPage").classList.add("hidden");
+          document.getElementById("dashboardPage").classList.remove("hidden");
+          document.getElementById("userEmailDisplay").innerText = user.email;
+          muatKatalog();
+          muatRiwayat();
+        }
+      }
+
+      function switchTab(tab) {
+        document
+          .getElementById("tabKatalog")
+          .classList.toggle("hidden", tab !== "katalog");
+        document
+          .getElementById("tabRiwayat")
+          .classList.toggle("hidden", tab !== "riwayat");
+        if (tab === "riwayat") muatRiwayat();
+      }
+
+      async function muatKatalog() {
+        const container = document.getElementById("katalogContainer");
+        const { data } = await clientBarang
+          .from("barang")
+          .select("*")
+          .order("nama_barang");
+
+        container.innerHTML = "";
+        if (data) {
+          data.forEach((b) => {
+            const habis = b.stok_tersedia <= 0;
+            container.innerHTML += `
+            <div class="bg-white p-5 rounded-2xl border ${habis ? "border-red-100 bg-red-50" : "border-slate-200"} shadow-sm flex flex-col justify-between">
+              <div>
+                <h3 class="font-bold text-slate-800">${b.nama_barang}</h3>
+                <p class="text-xs text-slate-500 mb-4 line-clamp-2">${b.deskripsi}</p>
+              </div>
+              <div class="flex items-center justify-between mt-auto">
+                <div class="text-sm font-semibold ${habis ? "text-red-500" : "text-emerald-600"}">Stok: ${b.stok_tersedia}</div>
+                <button onclick="pilihBarang(${b.id}, '${b.nama_barang}')" ${habis ? "disabled" : ""} class="px-4 py-2 rounded-xl text-sm font-bold transition ${habis ? "bg-slate-200 text-slate-400" : "bg-blue-600 text-white"}">${habis ? "Habis" : "Pinjam"}</button>
+              </div>
+            </div>`;
+          });
+        }
+      }
+
+      function pilihBarang(id, nama) {
+        document.getElementById("barangId").value = id;
+        document.getElementById("namaBarangPilihan").value = nama;
+      }
+
+      document
+        .getElementById("formPinjam")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const barangId = document.getElementById("barangId").value;
+          if (!barangId) return alert("Pilih barang!");
+
+          const { error } = await clientPinjam.from("peminjaman").insert([
+            {
+              nama_peminjam: userAktif.email,
+              nim_nipy: document.getElementById("nim").value,
+              barang_id: parseInt(barangId),
+              nama_barang_pinjam:
+                document.getElementById("namaBarangPilihan").value,
+              tgl_pinjam: document.getElementById("waktuPinjam").value,
+              tgl_kembali: document.getElementById("waktuKembali").value,
+              keperluan: document.getElementById("keperluan").value,
+              status: "Pending",
+            },
+          ]);
+
+          if (error) alert("Gagal kirim: " + error.message);
+          else {
+            alert("Pengajuan terkirim!");
+            document.getElementById("formPinjam").reset();
+            switchTab("riwayat");
+          }
+        });
+
+      async function muatRiwayat() {
+        const container = document.getElementById("riwayatContainer");
+        const { data } = await clientPinjam
+          .from("peminjaman")
+          .select("*")
+          .eq("nama_peminjam", userAktif.email)
+          .order("id", { ascending: false });
+
+        container.innerHTML = "";
+        if (data) {
+          data.forEach((item) => {
+            let badgeColor =
+              item.status === "Pending"
+                ? "bg-amber-100 text-amber-700"
+                : item.status === "Approved"
+                  ? "bg-blue-100 text-blue-700"
+                  : item.status === "Selesai"
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-rose-100 text-rose-700";
+            container.innerHTML += `
+            <tr class="hover:bg-slate-50 border-b border-slate-50">
+              <td class="p-4"><div class="font-bold">${item.nama_barang_pinjam || "Barang"}</div><div class="text-xs text-slate-500">${item.keperluan}</div></td>
+              <td class="p-4 text-xs">${item.tgl_pinjam.replace("T", " ")} <br>s.d<br> ${item.tgl_kembali.replace("T", " ")}</td>
+              <td class="p-4"><span class="px-3 py-1 rounded-full text-xs font-bold ${badgeColor}">${item.status}</span></td>
+              <td class="p-4 text-xs text-rose-600 font-medium">${item.alasan_penolakan || "-"}</td>
+            </tr>`;
+          });
+        }
+      }
+      cekSesi();
+    </script>
+  </body>
+</html>
